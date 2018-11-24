@@ -91,6 +91,9 @@ int callback_mpd(struct mg_connection *c)
         case MPD_API_RM_ALL:
             mpd_run_clear(mpd.conn);
             break;
+        case MPD_API_GET_MESSAGES:
+            n = mpd_put_channel_messages();
+            break;
         case MPD_API_RM_TRACK:
             if(sscanf(c->content, "MPD_API_RM_TRACK,%u", &uint_buf))
                 mpd_run_delete_id(mpd.conn, uint_buf);
@@ -426,6 +429,8 @@ void mpd_poll(struct mg_server *s)
             fprintf(stderr, "MPD connected.\n");
             mpd_connection_set_timeout(mpd.conn, 10000);
             mpd.conn_state = MPD_CONNECTED;
+            /* subscribe to channel ympd */
+            mpd_run_subscribe(mpd.conn,"ympd");
             /* write outputs */
             mpd.buf_size = mpd_put_outputs(mpd.buf, 1);
             for (struct mg_connection *c = mg_next(s, NULL); c != NULL; c = mg_next(s, c))
@@ -634,6 +639,33 @@ int mpd_put_queue(char *buffer, unsigned int offset)
 
     cur += json_emit_raw_str(cur, end - cur, "]}");
     return cur - buffer;
+}
+
+
+int mpd_put_channel_messages()
+{
+    char *cur = mpd.buf;
+    const char *end = mpd.buf + MAX_SIZE;
+    struct mpd_message *channel_message  = NULL;
+    if (!mpd_send_read_messages(mpd.conn))
+        return 0;
+
+    cur += json_emit_raw_str(cur, end  - cur, "{\"type\":\"channel_messages\",\"data\":[ ");
+        
+    while ((channel_message = mpd_recv_message(mpd.conn)) != NULL) {
+        cur += json_emit_raw_str(cur, end - cur, "{\"channel\":");
+        cur += json_emit_quoted_str(cur, end - cur, mpd_message_get_channel(channel_message));
+        cur += json_emit_raw_str(cur, end - cur, ",\"message\":");
+        cur += json_emit_quoted_str(cur, end - cur, mpd_message_get_text(channel_message));
+        cur += json_emit_raw_str(cur, end - cur, "},");
+        mpd_message_free(channel_message);
+    }
+
+    /* remove last ',' */
+    cur--;
+
+    cur += json_emit_raw_str(cur, end - cur, "]}");
+    return cur - mpd.buf;
 }
 
 int mpd_put_browse(char *buffer, char *path, unsigned int offset)
