@@ -120,7 +120,7 @@ var app = $.sammy(function() {
         $('#dirble_left').find("tr:gt(0)").remove();
         $('#dirble_right').find("tr:gt(0)").remove();
 
-        $('#panel-heading').text("Dirble");
+        $('#panel-heading').text("Radio");
         $('#dirble').addClass('active');
 
         $('#next').addClass('hide');
@@ -199,11 +199,12 @@ function webSocketConnect() {
     try {
         socket.onopen = function() {
             console.log("connected");
+            /*
             $('.top-right').notify({
                 message:{text:"Connected to ympd"},
                 fadeOut: { enabled: true, delay: 500 }
             }).show();
-
+            */
             app.run();
             /* emit initial request for output names */
             socket.send('MPD_API_GET_OUTPUTS');
@@ -298,6 +299,13 @@ function webSocketConnect() {
                     break;
                 case 'search':
                     $('#wait').modal('hide');
+                case 'channel_messages':
+                    for (var item in obj.data) {
+                        var rfid = obj.data[item].message.match(/^RFID:(.+)/)
+                        if(rfid){
+                            $('#rfid').val(rfid.pop());
+                        }
+                    }
                 case 'browse':
                     if(current_app !== 'browse' && current_app !== 'search')
                         break;
@@ -773,6 +781,10 @@ function getHost() {
     $('#mpdport').keypress(onEnter);
     $('#mpd_pw').keypress(onEnter);
     $('#mpd_pw_con').keypress(onEnter);
+}
+
+function getRFID() {
+    socket.send('MPD_API_GET_MESSAGES');
 }
 
 $('#search').submit(function () {
