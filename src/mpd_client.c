@@ -232,6 +232,20 @@ out_playlist:
 out_save_queue:
             free(p_charbuf);
             break;
+        case MPD_API_DELETE_PLAYLIST:
+            p_charbuf = strdup(c->content);
+            if(strcmp(strtok(p_charbuf, ","), "MPD_API_DELETE_PLAYLIST"))
+                goto out_delete_playlist;
+
+            if((token = strtok(NULL, ",")) == NULL)
+                goto out_delete_playlist;
+
+			free(p_charbuf);
+            p_charbuf = strdup(c->content);
+            mpd_run_rm(mpd.conn, get_arg1(p_charbuf));
+out_delete_playlist:
+            free(p_charbuf);
+            break;
         case MPD_API_SEARCH:
             p_charbuf = strdup(c->content);
             if(strcmp(strtok(p_charbuf, ","), "MPD_API_SEARCH"))

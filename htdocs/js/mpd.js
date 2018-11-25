@@ -162,6 +162,20 @@ var app = $.sammy(function() {
 $(document).ready(function(){
     webSocketConnect();
     $("#volumeslider").slider(0);
+
+    $('#savequeue').on('show.bs.modal', function (e) {
+        socket.send('MPD_API_GET_MESSAGES');
+    })
+
+    $('#getrfid').on('click', function (e) {
+        socket.send('MPD_API_GET_MESSAGES');
+    });
+
+
+    $('#clearrfid').on('click', function (e) {
+        $("#rfid").val("");
+    });
+
     $("#volumeslider").on('slider.newValue', function(evt,data){
         socket.send("MPD_API_SET_VOLUME,"+data.val);
     });
@@ -301,9 +315,11 @@ function webSocketConnect() {
                     $('#wait').modal('hide');
                 case 'channel_messages':
                     for (var item in obj.data) {
-                        var rfid = obj.data[item].message.match(/^RFID:(.+)/)
-                        if(rfid){
-                            $('#rfid').val(rfid.pop());
+                        if(obj.data[item].message){
+                            var rfid = obj.data[item].message.match(/^RFID:(.+)/)
+                            if(rfid){
+                                $('#rfid').val(rfid.pop());
+                            }
                         }
                     }
                 case 'browse':
@@ -392,16 +408,18 @@ function webSocketConnect() {
                             .find('a').click(function(e) {
                                 e.stopPropagation();
                                 socket.send(onClickAction + "," + decodeURI($(this).parents("tr").attr("uri")));
-                            $('.top-right').notify({
-                                message:{
-                                    text: "\"" + $('td:nth-last-child(3)', $(this).parents("tr")).text() + "\" added"
-                                } }).show();
+                                $('.top-right').notify({
+                                    message:{
+                                    text: "\"" + $('td:nth-last-child(3)', $(this).parents("tr")).text() + "\" "+ $(this).parents("tr").hasClass('plist')? "deleted": "added"
+                                }}).show();
+                                if($(this).parents("tr").hasClass('plist')){ $(this).parents("tr").fadeOut(400,function() { $(this).remove() });}
                             }).fadeTo('fast',1);
                     }
 
                     if ( isTouch ) {
                         appendClickableIcon($("#salamisandwich > tbody > tr.dir > td:last-child"), 'MPD_API_ADD_TRACK', 'plus');
                         appendClickableIcon($("#salamisandwich > tbody > tr.song > td:last-child"), 'MPD_API_ADD_TRACK', 'play');
+                        appendClickableIcon($("#salamisandwich > tbody > tr.plist > td:last-child"), 'MPD_API_DELETE_PLAYLIST', 'trash');
                     } else {
                         $('#salamisandwich > tbody > tr').on({
                             mouseenter: function() {
@@ -409,6 +427,8 @@ function webSocketConnect() {
                                     appendClickableIcon($(this).children().last(), 'MPD_API_ADD_TRACK', 'plus');
                                 else if($(this).is(".song"))
                                     appendClickableIcon($(this).children().last(), 'MPD_API_ADD_PLAY_TRACK', 'play');
+                                else if($(this).is(".plist"))
+                                    appendClickableIcon($(this).children().last(), 'MPD_API_DELETE_PLAYLIST', 'trash');
                             },
                             mouseleave: function(){
                                 $(this).children().last().find("a").stop().remove();
@@ -783,10 +803,6 @@ function getHost() {
     $('#mpd_pw_con').keypress(onEnter);
 }
 
-function getRFID() {
-    socket.send('MPD_API_GET_MESSAGES');
-}
-
 $('#search').submit(function () {
     app.setLocation("#/search/"+$('#search > div > input').val());
     $('#wait').modal('show');
@@ -836,10 +852,20 @@ function addStream() {
 }
 
 function saveQueue() {
-    if($('#playlistname').val().length > 0) {
+    if($('#rfid').val().length > 0 && $('#playlistname').val() > 0) {
+        socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val()+"-"+$('#playlistname').val());
+    } else if ($('#rfid').val().length > 0) {
+        socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val());
+    } else if ($('#playlistname').val().length > 0){
         socket.send('MPD_API_SAVE_QUEUE,'+$('#playlistname').val());
     }
     $('#savequeue').modal('hide');
+}
+
+function deletePlaylist(name) {
+    if (name.length > 0){
+        socket.send('MPD_API_DELETE_PLAYLIST,'+name);
+    }
 }
 
 function confirmSettings() {
@@ -1120,5 +1146,5 @@ function add_filter () {
         $('#filter').append('&nbsp;<a onclick="set_filter(\'' + c + '\')" href="#/browse/0/">' + c + '</a>');
     }
 
-    $('#filter').append('&nbsp;<a onclick="set_filter(\'||\')" href="#/browse/0/" class="glyphicon glyphicon-list"></a>');
+    $('#filter').append('&nbsp;<a onclick="set_filter(\'||\')" href="#/browse/0/"><span class="glyphicon glyphicon-list"></span> Playlists</a>');
 }
