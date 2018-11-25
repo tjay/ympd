@@ -223,7 +223,7 @@ function webSocketConnect() {
             /* emit initial request for output names */
             socket.send('MPD_API_GET_OUTPUTS');
             /* emit initial request for dirble api token */
-            socket.send('MPD_API_GET_DIRBLEAPITOKEN');
+            /* socket.send('MPD_API_GET_DIRBLEAPITOKEN'); */
         }
 
         socket.onmessage = function got_packet(msg) {
