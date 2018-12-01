@@ -852,13 +852,14 @@ function addStream() {
 }
 
 function saveQueue() {
-    if($('#rfid').val().length > 0 && $('#playlistname').val() > 0) {
+    if($('#rfid').val().length > 0 && $('#playlistname').val().length > 0) {
         socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val()+"-"+$('#playlistname').val());
     } else if ($('#rfid').val().length > 0) {
         socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val());
     } else if ($('#playlistname').val().length > 0){
         socket.send('MPD_API_SAVE_QUEUE,'+$('#playlistname').val());
     }
+    $('#playlistname').val("")
     $('#savequeue').modal('hide');
 }
 
