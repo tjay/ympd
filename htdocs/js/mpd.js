@@ -926,7 +926,7 @@ function saveQueue() {
     } else if ($('#rfid').val().length > 0) {
         socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val());
     }
-    socket.send("MPD_API_SEND_MESSAGE,yarmp,"+encodeURI(JSON.stringify({"action":"set_rfid_options","value":playlist})))
+    socket.send("MPD_API_SEND_MESSAGE,yarmp,"+escape(JSON.stringify({"action":"set_rfid_options","value":playlist})))
     $('#playlistname').val("")
     $('#savequeue').modal('hide');
 }
