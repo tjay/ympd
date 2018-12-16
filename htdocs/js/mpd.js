@@ -321,7 +321,7 @@ function webSocketConnect() {
                         if(obj.data[item].message){
                             var rfid_options = obj.data[item].message.match(/^RFID_OPTIONS:(.+)/)
                             if(rfid_options) {
-                                playlist = JSON.parse( rfid_options.pop());
+                                playlist = JSON.parse(rfid_options.pop());
                                 playlist_load_options();
                                 playlist_validate($('#playlistname'));
                             }
@@ -655,10 +655,10 @@ function playlist_ui_options(){
 
 function playlist_load_options() {
     if(playlist.rfid) {
+        $("#playlistname").val(playlist.name)
         $('#rfid').val(playlist.rfid)
         $('#use-playlist-url').prop("checked",playlist.options.url);
         $('#playlist-url').val(playlist.options.url)
-
     }
 }
 
@@ -916,18 +916,23 @@ function addStream() {
         socket.send('MPD_API_RM_ALL');
         socket.send("MPD_API_ADD_PLAYLIST," + $('#streamurl').val());
     }
-    $('#streamurl').val("");
     $('#addstream').modal('hide');
 }
 
 function saveQueue() {
+    var playlistname = "";
     if($('#rfid').val().length > 0 && $('#playlistname').val().length > 0) {
-        socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val()+"-"+$('#playlistname').val());
+        playlistname = 'RFID-'+$('#rfid').val()+"-"+$('#playlistname').val();
     } else if ($('#rfid').val().length > 0) {
-        socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val());
+        playlistname = 'RFID-'+$('#rfid').val();
     }
-    socket.send("MPD_API_SEND_MESSAGE,yarmp,"+escape(JSON.stringify({"action":"set_rfid_options","value":playlist})))
-    $('#playlistname').val("")
+    if(name) {
+        if(! playlist.options.new) {
+            socket.send("MPD_API_DELETE_PLAYLIST,"+playlistname);
+        }
+        socket.send("MPD_API_SAVE_QUEUE,"+playlistname);
+        socket.send("MPD_API_SEND_MESSAGE,yarmp,"+escape(JSON.stringify({"action":"set_rfid_options","value":playlist})))
+    }
     $('#savequeue').modal('hide');
 }
 
