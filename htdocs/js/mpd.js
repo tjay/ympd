@@ -165,6 +165,8 @@ $(document).ready(function(){
 
     $('#savequeue').on('show.bs.modal', function (e) {
         socket.send('MPD_API_GET_MESSAGES');
+        playlist_ui_options();
+        playlist_validate();
     })
 
     $('#getrfid').on('click', function (e) {
@@ -174,6 +176,7 @@ $(document).ready(function(){
 
     $('#clearrfid').on('click', function (e) {
         $("#rfid").val("");
+        playlist_validate();
     });
 
     $("#volumeslider").on('slider.newValue', function(evt,data){
@@ -316,9 +319,11 @@ function webSocketConnect() {
                 case 'channel_messages':
                     for (var item in obj.data) {
                         if(obj.data[item].message){
-                            var rfid = obj.data[item].message.match(/^RFID:(.+)/)
-                            if(rfid){
-                                $('#rfid').val(rfid.pop());
+                            var rfid_options = obj.data[item].message.match(/^RFID_OPTIONS:(.+)/)
+                            if(rfid_options) {
+                                playlist = JSON.parse( rfid_options.pop());
+                                playlist_load_options();
+                                playlist_validate($('#playlistname'));
                             }
                         }
                     }
@@ -629,6 +634,56 @@ function webSocketConnect() {
 
 }
 
+var playlist = {
+    rifd:"",
+    options:{
+        resume:false,
+        repeat:false,
+        single:false,
+        crossfade:false,
+        random:false,
+        url:""
+    }
+};
+
+function playlist_ui_options(){
+    playlist.options.random = $('#btnrandom').hasClass('active');
+    playlist.options.single = $('#btnsingle').hasClass('active');
+    playlist.options.crossfade = $('#btncrossfade').hasClass('active');
+    playlist.options.repeat = $('#btnrepeat').hasClass('active');
+}
+
+function playlist_load_options() {
+    if(playlist.rfid) {
+        $('#rfid').val(playlist.rfid)
+        $('#use-playlist-url').prop("checked",playlist.options.url);
+        $('#playlist-url').val(playlist.options.url)
+
+    }
+}
+
+function playlist_validate(focus){
+
+    $('#playlistname').prop('readonly', $('#rfid').val()==='');
+    if( $('#rfid').val() === '') {
+        $('#playlistname').val("");
+    }
+    $('#playlist-url').prop('readonly', !$('#use-playlist-url').is(':checked'));
+
+    $('#playlist-random').prop("checked",playlist.options.random);
+    $('#playlist-single').prop("checked",playlist.options.single);
+    $('#playlist-crossfade').prop("checked",playlist.options.crossfade);
+    $('#playlist-repeat').prop("checked",playlist.options.repeat);
+    $('#playlist-resume').prop("checked",playlist.options.resume);
+
+    $('#playlist-save').prop('disabled', $('#rfid').val()==='');
+
+    if(focus) {
+        $(focus).focus()
+    }
+
+}
+
 function get_appropriate_ws_url()
 {
     var pcol;
@@ -748,9 +803,22 @@ $('#btnrandom').on('click', function (e) {
     socket.send("MPD_API_TOGGLE_RANDOM," + ($(this).hasClass('active') ? 0 : 1));
 
 });
+
+$('#use-playlist-url').on('click', function (e) {
+    $('#playlist-url').val($(this).is(':checked') ? playlist.options.url : "");
+    playlist_validate($(this).is(':checked') ? $('#playlist-url') : null);
+});
+
+$('#playlist-url').on("keyup", function (e) { playlist.options.url = $(this).val()});
+
+$('#playlist-repeat').on('click', function (e) { playlist.options.repeat = $(this).is(':checked')});
+$('#playlist-single').on('click', function (e) { playlist.options.single = $(this).is(':checked')});
+$('#playlist-random').on('click', function (e) { playlist.options.random = $(this).is(':checked')});
+$('#playlist-crossfade').on('click', function (e) { playlist.options.crossfade = $(this).is(':checked')});
+$('#playlist-resume').on('click', function (e) { playlist.options.resume = $(this).is(':checked')});
+
 $('#btnconsume').on('click', function (e) {
     socket.send("MPD_API_TOGGLE_CONSUME," + ($(this).hasClass('active') ? 0 : 1));
-
 });
 $('#btnsingle').on('click', function (e) {
     socket.send("MPD_API_TOGGLE_SINGLE," + ($(this).hasClass('active') ? 0 : 1));
@@ -845,7 +913,8 @@ $('.page-btn').on('click', function (e) {
 
 function addStream() {
     if($('#streamurl').val().length > 0) {
-        socket.send('MPD_API_ADD_TRACK,'+$('#streamurl').val());
+        socket.send('MPD_API_RM_ALL');
+        socket.send("MPD_API_ADD_PLAYLIST," + $('#streamurl').val());
     }
     $('#streamurl').val("");
     $('#addstream').modal('hide');
@@ -856,9 +925,8 @@ function saveQueue() {
         socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val()+"-"+$('#playlistname').val());
     } else if ($('#rfid').val().length > 0) {
         socket.send('MPD_API_SAVE_QUEUE,RFID-'+$('#rfid').val());
-    } else if ($('#playlistname').val().length > 0){
-        socket.send('MPD_API_SAVE_QUEUE,'+$('#playlistname').val());
     }
+    socket.send("MPD_API_SEND_MESSAGE,yarmp,"+encodeURI(JSON.stringify({"action":"set_rfid_options","value":playlist})))
     $('#playlistname').val("")
     $('#savequeue').modal('hide');
 }

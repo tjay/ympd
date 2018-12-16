@@ -149,12 +149,18 @@
       <div class="col-md-2 col-xs-12">
         <div class="btn-toolbar">
           <div class="btn-group-vertical btn-block btn-group-lg" data-toggle="buttons">
-            <button id="btncrossfade" type="button" class="btn btn-default">
-              <span class="glyphicon glyphicon-link"></span> Crossfade
-            </button>
-            <button id="btnrepeat" type="button" class="btn btn-default">
-              <span class="glyphicon glyphicon-repeat"></span> Repeat
-            </button>
+              <button id="btnrandom" type="button" class="btn btn-default">
+                  <span class="glyphicon glyphicon-random"></span> Random
+                </button>
+                <button id="btnsingle" type="button" class="btn btn-default">
+                  <span class="glyphicon glyphicon-star"></span> Single
+                </button>
+                <button id="btncrossfade" type="button" class="btn btn-default">
+                  <span class="glyphicon glyphicon-link"></span> Crossfade
+                </button>
+                <button id="btnrepeat" type="button" class="btn btn-default">
+                  <span class="glyphicon glyphicon-repeat"></span> Repeat
+                </button>
           </div>
           <div id="btn-outputs-block" class="btn-group-vertical btn-block btn-group-lg">
           </div>
@@ -231,12 +237,12 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h2 class="modal-title" id="savequeueLabel"><span class="glyphicon glyphicon-wrench"></span> Save Queue</h2>
+          <h2 class="modal-title" id="savequeueLabel">Save Queue</h2>
         </div>
         <div class="modal-body">
           <form role="form">
             <div class="row">
-              <div class="form-group col-md-5">
+              <div class="form-group col-sm-5">
                 <label class="control-label" for="rfidig">RFID</label>
                 <div class="input-group" id="rfidig">
                   <input type="text" class="form-control" readonly placeholder="RFID" id="rfid" />
@@ -247,16 +253,39 @@
                 </div>
               </div>
 
-              <div class="form-group col-md-7">
+              <div class="form-group col-sm-7">
                 <label class="control-label" for="playlistname">Playlist Name</label>
                 <input type="text" class="form-control" id="playlistname" />
+              </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-12">
+                  <label class="control-label" for="playlist-url-grp">Auto-Update Playlist from URL</label>
+                  <div class="input-group" id="playlist-url-grp">
+                    <span class="input-group-addon">
+                      <input type="checkbox" id="use-playlist-url">
+                    </span>
+                    <input type="text" readonly placeholder="http://playlist.url/songs.m3u" class="form-control" id="playlist-url" />
+                  </div>
+                </div>
+            </div>
+            <div class="row">
+              <div class="form-group col-sm-12">
+                <label class="control-label" for="options">Options</label>
+                <div class="input-group" id="options">
+                  <label class="checkbox-inline"><input type="checkbox" id="playlist-repeat">Repeat</label>
+                  <label class="checkbox-inline"><input type="checkbox" id="playlist-single">Single</label>
+                  <label class="checkbox-inline"><input type="checkbox" id="playlist-random">Random</label>
+                  <label class="checkbox-inline"><input type="checkbox" id="playlist-crossfade">Crossfade</label>
+                  <label class="checkbox-inline"><input type="checkbox" id="playlist-resume">Resume</label>
+                </div>
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-default" onclick="saveQueue();">Save Queue</button>
+          <button type="button" class="btn btn-default" id="playlist-save" onclick="saveQueue();">Save Queue</button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
