@@ -915,6 +915,7 @@ function addStream() {
     if($('#streamurl').val().length > 0) {
         socket.send('MPD_API_RM_ALL');
         socket.send("MPD_API_ADD_PLAYLIST," + $('#streamurl').val());
+        playlist.options.url = $('#streamurl').val();
     }
     $('#addstream').modal('hide');
 }
@@ -928,7 +929,7 @@ function saveQueue() {
     }
     if(playlistname) {
         if(! playlist.options.new) {
-            socket.send("MPD_API_DELETE_PLAYLIST,"+playlistname);
+            socket.send("MPD_API_DELETE_PLAYLIST,"+playlist.name);
         }
         socket.send("MPD_API_SAVE_QUEUE,"+playlistname);
         socket.send("MPD_API_SEND_MESSAGE,yarmp,"+escape(JSON.stringify({"action":"set_rfid_options","value":playlist})))
