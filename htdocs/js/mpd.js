@@ -926,7 +926,7 @@ function saveQueue() {
     } else if ($('#rfid').val().length > 0) {
         playlistname = 'RFID-'+$('#rfid').val();
     }
-    if(name) {
+    if(playlistname) {
         if(! playlist.options.new) {
             socket.send("MPD_API_DELETE_PLAYLIST,"+playlistname);
         }
