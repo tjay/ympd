@@ -135,6 +135,7 @@ int mg_terminate_ssl(struct mg_connection *c, const char *cert);
 int mg_forward(struct mg_connection *c, const char *addr);
 void *mg_mmap(FILE *fp, size_t size);
 void mg_munmap(void *p, size_t size);
+int mg_match_prefix(const char *pattern, ssize_t pattern_len, const char *str);
 
 
 // Templates support

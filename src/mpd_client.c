@@ -228,7 +228,7 @@ out_playlist:
 
 			free(p_charbuf);
             p_charbuf = strdup(c->content);
-            mpd_run_save(mpd.conn, get_arg1(p_charbuf));
+            mpd_save_playlist(get_arg1(p_charbuf));
 out_save_queue:
             free(p_charbuf);
             break;
@@ -680,6 +680,30 @@ int mpd_put_channel_messages()
 
     cur += json_emit_raw_str(cur, end - cur, "]}");
     return cur - mpd.buf;
+}
+
+void mpd_save_playlist(char *pl) {
+    struct mpd_entity *entity;
+    const char *old_pl;
+    char old_rfid[15]; //RFID-08008C1B4F
+    char new_rfid[15]; //
+
+    strncpy(new_rfid,pl,15);
+
+    mpd_send_list_meta(mpd.conn, "/");
+
+    while((entity = mpd_recv_entity(mpd.conn)) != NULL) {
+        if (mpd_entity_get_type(entity) == MPD_ENTITY_TYPE_PLAYLIST)  {
+            old_pl = mpd_playlist_get_path(mpd_entity_get_playlist(entity));
+            strncpy (old_rfid,old_pl,15);
+            if( strcmp( old_rfid, new_rfid ) == 0 && mg_match_prefix("RFID**",6,old_pl) > 0) {
+                mpd_send_rm(mpd.conn,old_pl);
+            }
+        }
+        mpd_entity_free(entity);
+    }
+    mpd_response_finish(mpd.conn);
+    mpd_run_save(mpd.conn,pl);
 }
 
 int mpd_put_browse(char *buffer, char *path, unsigned int offset)
